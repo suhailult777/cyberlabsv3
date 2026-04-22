@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Clock,
 } from 'lucide-react';
+import { FadeIn, SlideIn } from '@/components/motion';
 
 interface Stats {
   totalLabs: number;
@@ -58,7 +59,7 @@ export default function AdminPage() {
           totalLabs: labsData.labs.length,
           totalPlans: plansData.plans.length,
           totalRevenue,
-          activeUsers: 1, // Mock: only demo user
+          activeUsers: 1,
           activeEnvironments,
           pendingPayments,
         });
@@ -77,50 +78,59 @@ export default function AdminPage() {
       label: 'Total Labs',
       value: stats.totalLabs,
       icon: FlaskConical,
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-500/10',
+      color: 'text-[#00e676]',
+      bg: 'bg-[#00e676]/10',
+      border: 'border-[#00e676]/20',
     },
     {
       label: 'Total Plans',
       value: stats.totalPlans,
       icon: Activity,
-      color: 'text-sky-400',
-      bg: 'bg-sky-500/10',
+      color: 'text-[#00e676]',
+      bg: 'bg-[#00e676]/10',
+      border: 'border-[#00e676]/20',
     },
     {
       label: 'Revenue',
       value: formatCurrency(stats.totalRevenue),
       icon: DollarSign,
-      color: 'text-amber-400',
-      bg: 'bg-amber-500/10',
+      color: 'text-[#ffb000]',
+      bg: 'bg-[#ffb000]/10',
+      border: 'border-[#ffb000]/20',
     },
     {
       label: 'Active Users',
       value: stats.activeUsers,
       icon: Users,
-      color: 'text-rose-400',
-      bg: 'bg-rose-500/10',
+      color: 'text-[#ff4757]',
+      bg: 'bg-[#ff4757]/10',
+      border: 'border-[#ff4757]/20',
     },
     {
       label: 'Active Environments',
       value: stats.activeEnvironments,
       icon: Server,
-      color: 'text-violet-400',
-      bg: 'bg-violet-500/10',
+      color: 'text-[#00e676]',
+      bg: 'bg-[#00e676]/10',
+      border: 'border-[#00e676]/20',
     },
     {
       label: 'Pending Payments',
       value: stats.pendingPayments,
       icon: Clock,
-      color: 'text-orange-400',
-      bg: 'bg-orange-500/10',
+      color: 'text-[#ffb000]',
+      bg: 'bg-[#ffb000]/10',
+      border: 'border-[#ffb000]/20',
     },
   ];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-neutral-700 border-t-emerald-500 rounded-full animate-spin" />
+        <div className="flex items-center gap-3 text-[#8a8a9a] font-[family-name:var(--font-mono)]">
+          <div className="w-5 h-5 border-2 border-[#1a1a2e] border-t-[#00e676] rounded-full animate-spin" />
+          <span>Loading admin dashboard...</span>
+        </div>
       </div>
     );
   }
@@ -128,98 +138,115 @@ export default function AdminPage() {
   return (
     <div className="space-y-10">
       {/* Header */}
-      <div className="border-b border-neutral-800 pb-6">
-        <h1 className="text-3xl font-bold tracking-tight mb-1">Admin Dashboard</h1>
-        <p className="text-sm text-neutral-400">Overview of platform activity and metrics.</p>
-      </div>
+      <FadeIn>
+        <div className="border-b border-[#1a1a2e] pb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <Server className="w-4 h-4 text-[#00e676]" />
+            <span className="text-[10px] font-bold text-[#00e676] font-[family-name:var(--font-mono)] tracking-wider">
+              ADMIN_CONSOLE
+            </span>
+          </div>
+          <h1 className="text-2xl font-bold text-[#e8e8ec] font-[family-name:var(--font-mono)]">
+            Admin Dashboard
+          </h1>
+          <p className="text-sm text-[#8a8a9a] mt-1 font-[family-name:var(--font-mono)]">
+            Overview of platform activity and metrics.
+          </p>
+        </div>
+      </FadeIn>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {statCards.map((card) => {
+        {statCards.map((card, index) => {
           const Icon = card.icon;
           return (
-            <div
-              key={card.label}
-              className="p-5 rounded-xl border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className={`p-2 rounded-lg ${card.bg}`}>
-                  <Icon className={`w-5 h-5 ${card.color}`} />
+            <SlideIn key={card.label} delay={index * 0.05} direction="up">
+              <div className="p-5 rounded-lg border border-[#1a1a2e] bg-[#0e0e14] relative overflow-hidden">
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`p-2 rounded-md ${card.bg} border ${card.border}`}>
+                    <Icon className={`w-5 h-5 ${card.color}`} />
+                  </div>
+                  <TrendingUp className="w-4 h-4 text-[#5a5a6a]" />
                 </div>
-                <TrendingUp className="w-4 h-4 text-neutral-600" />
+                <p className="text-2xl font-bold tracking-tight text-[#e8e8ec] font-[family-name:var(--font-mono)]">
+                  {card.value}
+                </p>
+                <p className="text-xs text-[#5a5a6a] mt-1 font-[family-name:var(--font-mono)]">{card.label}</p>
               </div>
-              <p className="text-2xl font-bold tracking-tight">{card.value}</p>
-              <p className="text-xs text-neutral-500 mt-1">{card.label}</p>
-            </div>
+            </SlideIn>
           );
         })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Labs Table */}
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
-          <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between">
-            <h2 className="font-semibold">Labs</h2>
-            <span className="text-xs px-2 py-1 rounded-full bg-neutral-800 text-neutral-400">
-              {labs.length} total
-            </span>
-          </div>
-          <div className="divide-y divide-neutral-800">
-            {labs.map((lab) => (
-              <div key={lab.id} className="px-5 py-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">{lab.name}</p>
-                  <p className="text-xs text-neutral-500">{lab.category}</p>
+        <SlideIn direction="left" delay={0.1}>
+          <div className="rounded-lg border border-[#1a1a2e] bg-[#0e0e14] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#1a1a2e] flex items-center justify-between">
+              <h2 className="font-bold text-sm text-[#e8e8ec] font-[family-name:var(--font-mono)]">Labs</h2>
+              <span className="text-xs px-2 py-1 rounded-sm bg-[#14141f] text-[#8a8a9a] border border-[#1a1a2e] font-[family-name:var(--font-mono)]">
+                {labs.length} total
+              </span>
+            </div>
+            <div className="divide-y divide-[#1a1a2e]">
+              {labs.map((lab) => (
+                <div key={lab.id} className="px-5 py-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-[#e8e8ec] font-[family-name:var(--font-mono)]">{lab.name}</p>
+                    <p className="text-xs text-[#5a5a6a] font-[family-name:var(--font-mono)] uppercase">{lab.category}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-[#00e676] font-[family-name:var(--font-mono)]">
+                      {formatCurrency(lab.hourlyPrice)}/hr
+                    </p>
+                    <p className="text-xs text-[#5a5a6a] font-[family-name:var(--font-mono)]">{lab.difficulty}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-emerald-400">
-                    {formatCurrency(lab.hourlyPrice)}/hr
-                  </p>
-                  <p className="text-xs text-neutral-500">{lab.difficulty}</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </SlideIn>
 
         {/* Recent Plans */}
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 overflow-hidden">
-          <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between">
-            <h2 className="font-semibold">Recent Plans</h2>
-            <span className="text-xs px-2 py-1 rounded-full bg-neutral-800 text-neutral-400">
-              {plans.length} total
-            </span>
-          </div>
-          <div className="divide-y divide-neutral-800">
-            {plans.length === 0 && (
-              <div className="px-5 py-8 text-center text-sm text-neutral-500">
-                No plans created yet.
-              </div>
-            )}
-            {plans.slice(-10).reverse().map((plan) => (
-              <div key={plan.id} className="px-5 py-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">{plan.labName}</p>
-                  <p className="text-xs text-neutral-500">{plan.hours} hrs</p>
+        <SlideIn direction="right" delay={0.15}>
+          <div className="rounded-lg border border-[#1a1a2e] bg-[#0e0e14] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#1a1a2e] flex items-center justify-between">
+              <h2 className="font-bold text-sm text-[#e8e8ec] font-[family-name:var(--font-mono)]">Recent Plans</h2>
+              <span className="text-xs px-2 py-1 rounded-sm bg-[#14141f] text-[#8a8a9a] border border-[#1a1a2e] font-[family-name:var(--font-mono)]">
+                {plans.length} total
+              </span>
+            </div>
+            <div className="divide-y divide-[#1a1a2e]">
+              {plans.length === 0 && (
+                <div className="px-5 py-8 text-center text-sm text-[#5a5a6a] font-[family-name:var(--font-mono)]">
+                  No plans created yet.
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">{formatCurrency(plan.totalAmount)}</p>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${
-                      plan.status === 'provisioned'
-                        ? 'bg-emerald-500/10 text-emerald-400'
-                        : plan.status === 'paid'
-                        ? 'bg-sky-500/10 text-sky-400'
-                        : 'bg-neutral-800 text-neutral-400'
-                    }`}
-                  >
-                    {plan.status}
-                  </span>
+              )}
+              {plans.slice(-10).reverse().map((plan) => (
+                <div key={plan.id} className="px-5 py-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-[#e8e8ec] font-[family-name:var(--font-mono)]">{plan.labName}</p>
+                    <p className="text-xs text-[#5a5a6a] font-[family-name:var(--font-mono)]">{plan.hours} hrs</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-[#e8e8ec] font-[family-name:var(--font-mono)]">{formatCurrency(plan.totalAmount)}</p>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-sm font-[family-name:var(--font-mono)] border ${
+                        plan.status === 'provisioned'
+                          ? 'bg-[#00e676]/10 text-[#00e676] border-[#00e676]/20'
+                          : plan.status === 'paid'
+                          ? 'bg-[#00e676]/10 text-[#00e676] border-[#00e676]/20'
+                          : 'bg-[#14141f] text-[#5a5a6a] border-[#1a1a2e]'
+                      }`}
+                    >
+                      {plan.status}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </SlideIn>
       </div>
     </div>
   );

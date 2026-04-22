@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { paymentInitiateSchema } from '@/lib/validators/schemas';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -20,6 +21,15 @@ export async function POST(request: Request) {
   await delay(500);
   const body = await request.json();
 
+  const parsed = paymentInitiateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues.map((e) => e.message).join(', ') },
+      { status: 400 }
+    );
+  }
+
+  const { planId } = parsed.data;
   const txnId = `txn-${Date.now()}`;
   const key = process.env.EASEBUZZ_KEY || '';
   const salt = process.env.EASEBUZZ_SALT || '';
@@ -31,7 +41,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       mock: true,
       txnId,
-      planId: body.planId,
+      planId,
       message: 'Mock payment initiated. Use simulate payment on frontend.',
     });
   }

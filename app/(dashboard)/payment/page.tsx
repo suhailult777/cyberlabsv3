@@ -6,7 +6,7 @@ import { useAppStore } from '@/lib/store/auth-store';
 import { apiClient } from '@/lib/utils/api';
 import { formatCurrency } from '@/lib/utils/format';
 import { toast } from 'sonner';
-import { ArrowRight, CheckCircle, CreditCard, Loader2, ShieldCheck, Terminal } from 'lucide-react';
+import { ArrowRight, CheckCircle, CreditCard, Loader2, ShieldCheck, Terminal, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageTransition, FadeIn } from '@/components/motion';
 
@@ -18,31 +18,37 @@ function PaymentPageContent() {
   const paymentStatus = useAppStore((s) => s.paymentStatus);
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isMockMode, setIsMockMode] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const mockSuccess = searchParams.get('mock') === 'success';
 
-  const handleMockSuccess = async () => {
-    setIsProcessing(true);
-    setPaymentStatus('processing');
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    await apiClient('/api/payments/verify', {
-      method: 'POST',
-      body: JSON.stringify({ txnId: 'txn-mock' }),
-    });
-    setPaymentStatus('success');
-    toast.success('Payment successful!');
-    setTimeout(() => {
-      router.push('/provision');
-    }, 1500);
-  };
-
   useEffect(() => {
-    if (mockSuccess && currentPlan) {
-      queueMicrotask(() => handleMockSuccess());
+    if (!mockSuccess || !currentPlan) return;
+    const planId = currentPlan.id;
+
+    let cancelled = false;
+
+    async function runMockSuccess() {
+      setIsProcessing(true);
+      setPaymentStatus('processing');
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (cancelled) return;
+      await apiClient('/api/payments/verify', {
+        method: 'POST',
+        body: JSON.stringify({ txnId: 'txn-mock', planId }),
+      });
+      if (cancelled) return;
+      setPaymentStatus('success');
+      toast.success('Payment successful!');
+      setTimeout(() => {
+        if (!cancelled) router.push('/provision');
+      }, 1500);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mockSuccess, currentPlan]);
+
+    runMockSuccess();
+    return () => { cancelled = true; };
+  }, [mockSuccess, currentPlan, router, setPaymentStatus]);
 
   if (!currentPlan) {
     return (
@@ -88,16 +94,9 @@ function PaymentPageContent() {
       });
 
       if (data.mock) {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        await apiClient('/api/payments/verify', {
-          method: 'POST',
-          body: JSON.stringify({ txnId: data.txnId }),
-        });
-        setPaymentStatus('success');
-        toast.success('Payment successful!');
-        setTimeout(() => {
-          router.push('/provision');
-        }, 1500);
+        setIsMockMode(true);
+        setIsProcessing(false);
+        setPaymentStatus('idle');
       } else if (data.paymentUrl && formRef.current) {
         const form = formRef.current;
         form.action = data.paymentUrl;
@@ -126,6 +125,33 @@ function PaymentPageContent() {
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Payment failed';
+      setPaymentStatus('failed');
+      toast.error(message);
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSimulatePayment = async () => {
+    setIsProcessing(true);
+    setPaymentStatus('processing');
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await apiClient('/api/payments/verify', {
+        method: 'POST',
+        body: JSON.stringify({
+          txnId: `txn-mock-${Date.now()}`,
+          planId: currentPlan.id,
+          amount: currentPlan.totalAmount,
+        }),
+      });
+      setPaymentStatus('success');
+      toast.success('Payment simulated successfully!');
+      setTimeout(() => {
+        router.push('/provision');
+      }, 1500);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Payment simulation failed';
       setPaymentStatus('failed');
       toast.error(message);
     } finally {
@@ -184,7 +210,7 @@ function PaymentPageContent() {
               <div>
                 <p className="text-sm font-medium text-[#e8e8ec] font-[family-name:var(--font-mono)]">Easebuzz Secure Checkout</p>
                 <p className="text-xs text-[#5a5a6a] font-[family-name:var(--font-mono)]">
-                  Mock mode: payment will auto-succeed
+                  {isMockMode ? 'Mock mode active' : 'Click below to proceed'}
                 </p>
               </div>
             </div>
@@ -217,15 +243,31 @@ function PaymentPageContent() {
                 animate={{ opacity: 1 }}
                 className="space-y-3"
               >
-                <button
-                  onClick={handlePay}
-                  disabled={isProcessing}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-[#06060a] bg-[#00e676] hover:bg-[#00c853] disabled:opacity-40 disabled:cursor-not-allowed rounded-md transition-all glow-accent font-[family-name:var(--font-mono)]"
-                >
-                  {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {isProcessing ? 'Processing...' : `Pay ${formatCurrency(currentPlan.totalAmount)}`}
-                  {!isProcessing && <ArrowRight className="w-4 h-4" />}
-                </button>
+                {!isMockMode ? (
+                  <button
+                    onClick={handlePay}
+                    disabled={isProcessing}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-[#06060a] bg-[#00e676] hover:bg-[#00c853] disabled:opacity-40 disabled:cursor-not-allowed rounded-md transition-all glow-accent font-[family-name:var(--font-mono)]"
+                  >
+                    {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isProcessing ? 'Processing...' : `Pay ${formatCurrency(currentPlan.totalAmount)}`}
+                    {!isProcessing && <ArrowRight className="w-4 h-4" />}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSimulatePayment}
+                    disabled={isProcessing}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-[#06060a] bg-[#ffb000] hover:bg-[#e6a000] disabled:opacity-40 disabled:cursor-not-allowed rounded-md transition-all font-[family-name:var(--font-mono)]"
+                  >
+                    {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isProcessing ? 'Simulating...' : (
+                      <>
+                        <Zap className="w-4 h-4" />
+                        Simulate Payment
+                      </>
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={() => router.push('/dashboard')}
                   disabled={isProcessing}

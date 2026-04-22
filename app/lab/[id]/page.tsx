@@ -13,7 +13,6 @@ import {
   User,
   Shield,
   Activity,
-  ChevronRight,
   Wifi,
   Server,
 } from 'lucide-react';
@@ -69,7 +68,7 @@ export default function LabPage() {
       if (remaining <= 0) {
         toast.error('Lab session expired');
         setLabEnvironment(null);
-        router.push('/dashboard');
+        // The validation effect below will handle redirect to dashboard
       }
     };
     updateTimer();
@@ -100,7 +99,7 @@ export default function LabPage() {
   const handleEndSession = () => {
     setLabEnvironment(null);
     toast.info('Session ended');
-    router.push('/dashboard');
+    // The validation effect below will handle redirect to dashboard
   };
 
   const copyToClipboard = (text: string, label: string) => {

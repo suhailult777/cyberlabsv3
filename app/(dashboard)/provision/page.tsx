@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store/auth-store';
 import { apiClient } from '@/lib/utils/api';
@@ -8,7 +8,7 @@ import { ProvisioningSteps } from '@/components/provision/ProvisioningSteps';
 import { LabEnvironmentView } from '@/components/provision/LabEnvironment';
 import { LabEnvironment } from '@/types';
 import { toast } from 'sonner';
-import { Loader2, Server, Terminal } from 'lucide-react';
+import { Loader2, Server } from 'lucide-react';
 import { PageTransition, FadeIn } from '@/components/motion';
 
 export default function ProvisionPage() {
@@ -19,10 +19,13 @@ export default function ProvisionPage() {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isProvisioning, setIsProvisioning] = useState(false);
-  const [isReady, setIsReady] = useState(false);
+  const hasStartedProvisioning = useRef(false);
 
-  const startProvisioning = async () => {
-    if (!currentPlan) return;
+  const isReady = labEnvironment?.status === 'running';
+
+  const startProvisioning = useCallback(async () => {
+    if (!currentPlan || isProvisioning || hasStartedProvisioning.current) return;
+    hasStartedProvisioning.current = true;
     setIsProvisioning(true);
 
     for (let i = 0; i < 3; i++) {
@@ -38,15 +41,15 @@ export default function ProvisionPage() {
 
       setLabEnvironment(res.environment);
       setCurrentStep(3);
-      setIsReady(true);
       toast.success('Lab is ready!');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Provisioning failed';
       toast.error(message);
+      hasStartedProvisioning.current = false;
     } finally {
       setIsProvisioning(false);
     }
-  };
+  }, [currentPlan, isProvisioning, setLabEnvironment]);
 
   useEffect(() => {
     if (!currentPlan) {
@@ -54,21 +57,21 @@ export default function ProvisionPage() {
       return;
     }
 
-    if (labEnvironment && labEnvironment.status === 'running') {
-      queueMicrotask(() => setIsReady(true));
-      return;
+    if (!isReady && !hasStartedProvisioning.current) {
+      startProvisioning();
     }
-
-    if (!isProvisioning && !isReady) {
-      queueMicrotask(() => startProvisioning());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPlan, labEnvironment]);
+  }, [currentPlan, isReady, router, startProvisioning]);
 
   const handleEndSession = () => {
     setLabEnvironment(null);
     toast.info('Session ended');
     router.push('/dashboard');
+  };
+
+  const handleOpenLab = () => {
+    if (labEnvironment) {
+      router.push(labEnvironment.accessUrl);
+    }
   };
 
   if (!currentPlan) {
@@ -104,7 +107,11 @@ export default function ProvisionPage() {
       {!isReady ? (
         <ProvisioningSteps currentStep={currentStep} />
       ) : labEnvironment ? (
-        <LabEnvironmentView environment={labEnvironment} onEndSession={handleEndSession} />
+        <LabEnvironmentView
+          environment={labEnvironment}
+          onEndSession={handleEndSession}
+          onOpenLab={handleOpenLab}
+        />
       ) : null}
     </PageTransition>
   );

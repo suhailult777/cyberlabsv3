@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { LabEnvironment } from '@/types';
+import { findPlanById, environmentsStore } from '@/lib/data/store';
+import { provisionSchema } from '@/lib/validators/schemas';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -7,17 +8,37 @@ export async function POST(request: Request) {
   await delay(3000);
   const body = await request.json();
 
+  const parsed = provisionSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues.map((e) => e.message).join(', ') },
+      { status: 400 }
+    );
+  }
+
+  const { planId } = parsed.data;
+  const plan = findPlanById(planId);
+
+  if (!plan) {
+    return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
+  }
+
+  const hours = plan.hours;
   const envId = `env-${Date.now()}`;
-  const env: LabEnvironment = {
+
+  const env = {
     id: envId,
-    planId: body.planId,
+    planId,
     accessUrl: `/lab/${envId}`,
     username: 'student',
     password: 'lab-pass-' + Math.floor(Math.random() * 10000),
-    status: 'running',
+    status: 'running' as const,
     startedAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+    expiresAt: new Date(Date.now() + hours * 60 * 60 * 1000).toISOString(),
   };
+
+  environmentsStore.push(env);
+  plan.status = 'provisioned';
 
   return NextResponse.json({ environment: env });
 }

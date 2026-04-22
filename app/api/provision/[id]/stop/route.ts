@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { findEnvironmentById, updateEnvironmentStatus } from '@/lib/data/store';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -9,16 +10,11 @@ export async function POST(
   await delay(500);
   const { id } = await params;
 
-  return NextResponse.json({
-    environment: {
-      id,
-      planId: 'plan-123',
-      accessUrl: `/lab/${id}`,
-      username: 'student',
-      password: 'lab-pass-1234',
-      status: 'stopped',
-      startedAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
-    },
-  });
+  const env = findEnvironmentById(id);
+  if (!env) {
+    return NextResponse.json({ error: 'Environment not found' }, { status: 404 });
+  }
+
+  const updated = updateEnvironmentStatus(id, 'stopped');
+  return NextResponse.json({ environment: updated });
 }

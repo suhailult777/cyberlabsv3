@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store/auth-store';
-import { FlaskConical, LogOut, User, Terminal } from 'lucide-react';
+import { LogOut, Terminal } from 'lucide-react';
 
 export function Navbar() {
-  const router = useRouter();
   const { isAuthenticated, user, logout, hasHydrated } = useAppStore();
   const [scrolled, setScrolled] = useState(false);
 
@@ -16,6 +14,15 @@ export function Navbar() {
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  const handleLogout = async () => {
+    // Call logout API first to clear server-side cookie
+    await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    // Then clear client-side state (localStorage, sessionStorage, cookie, zustand)
+    logout();
+    // Hard reload to ensure clean state
+    window.location.href = '/';
+  };
 
   if (!hasHydrated) {
     return (
@@ -59,11 +66,7 @@ export function Navbar() {
                   <span>{user?.name || user?.email?.split('@')[0]}</span>
                 </div>
                 <button
-                  onClick={() => {
-                    logout();
-                    document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-                    window.location.href = '/';
-                  }}
+                  onClick={handleLogout}
                   className="inline-flex items-center gap-1.5 text-sm font-medium text-[#8a8a9a] hover:text-[#ff4757] transition-colors font-[family-name:var(--font-mono)]"
                 >
                   <LogOut className="w-4 h-4" />

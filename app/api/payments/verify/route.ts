@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { paymentsStore, updatePlanStatus } from '@/lib/data/store';
+import { paymentVerifySchema } from '@/lib/validators/schemas';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -21,12 +23,34 @@ export async function POST(request: Request) {
   await delay(1000);
   const body = await request.json();
 
+  const parsed = paymentVerifySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues.map((e) => e.message).join(', ') },
+      { status: 400 }
+    );
+  }
+
   const key = process.env.EASEBUZZ_KEY || '';
   const salt = process.env.EASEBUZZ_SALT || '';
   const hasEasebuzzKeys = key && salt;
 
   if (!hasEasebuzzKeys) {
-    // Mock: always succeed
+    // Mock: always succeed and persist payment
+    const payment = {
+      id: `pay-${Date.now()}`,
+      planId: body.planId || 'mock-plan',
+      amount: body.amount || 0,
+      easebuzzTxnId: body.txnId || `txn-${Date.now()}`,
+      status: 'success' as const,
+      paidAt: new Date().toISOString(),
+    };
+    paymentsStore.push(payment);
+
+    if (body.planId) {
+      updatePlanStatus(body.planId, 'paid');
+    }
+
     return NextResponse.json({
       status: 'success',
       txnId: body.txnId,
@@ -74,6 +98,21 @@ export async function POST(request: Request) {
       { status: 'failed', message: `Payment status: ${status}` },
       { status: 400 }
     );
+  }
+
+  // Persist successful payment
+  const payment = {
+    id: `pay-${Date.now()}`,
+    planId: body.planId || 'unknown',
+    amount: Number(amount) || 0,
+    easebuzzTxnId: txnid,
+    status: 'success' as const,
+    paidAt: new Date().toISOString(),
+  };
+  paymentsStore.push(payment);
+
+  if (body.planId) {
+    updatePlanStatus(body.planId, 'paid');
   }
 
   return NextResponse.json({

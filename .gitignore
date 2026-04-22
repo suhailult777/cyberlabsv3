@@ -61,3 +61,8 @@ CLAUDE.md
 opencode.json
 skills-lock.json
 .agents/
+
+# e2e test artifacts
+*.yml
+e2e-*.png
+vercel-*.png

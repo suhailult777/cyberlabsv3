@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { planSchema } from '@/lib/validators/schemas';
@@ -12,7 +12,7 @@ import { useAppStore } from '@/lib/store/auth-store';
 import { LabGrid } from '@/components/labs/LabGrid';
 import { Lab, Plan } from '@/types';
 import { toast } from 'sonner';
-import { ArrowRight, Clock, Loader2, Terminal, User, Activity, Server } from 'lucide-react';
+import { ArrowRight, Loader2, User, Activity, Server } from 'lucide-react';
 import { PageTransition, FadeIn, SlideIn } from '@/components/motion';
 
 type PlanForm = z.infer<typeof planSchema>;
@@ -33,6 +33,9 @@ export default function DashboardPage() {
     defaultValues: { labId: '', hours: 2 },
   });
 
+  const hours = useWatch({ control: form.control, name: 'hours' }) || 1;
+  const total = selectedLab ? selectedLab.hourlyPrice * hours : 0;
+
   useEffect(() => {
     apiClient<{ labs: Lab[] }>('/api/labs')
       .then((data) => {
@@ -50,9 +53,6 @@ export default function DashboardPage() {
       form.setValue('labId', selectedLab.id);
     }
   }, [selectedLab, form]);
-
-  const hours = form.watch('hours') || 1;
-  const total = selectedLab ? selectedLab.hourlyPrice * hours : 0;
 
   const onSubmit = async (data: PlanForm) => {
     if (!selectedLab) {

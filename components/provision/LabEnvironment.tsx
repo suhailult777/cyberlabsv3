@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LabEnvironment } from '@/types';
 import { formatDuration } from '@/lib/utils/format';
-import { Clock, Copy, ExternalLink, Power, Terminal, User } from 'lucide-react';
+import { Clock, Copy, ExternalLink, Power, Terminal, User, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { FadeIn } from '@/components/motion';
@@ -11,9 +11,10 @@ import { FadeIn } from '@/components/motion';
 interface LabEnvironmentViewProps {
   environment: LabEnvironment;
   onEndSession: () => void;
+  onOpenLab: () => void;
 }
 
-export function LabEnvironmentView({ environment, onEndSession }: LabEnvironmentViewProps) {
+export function LabEnvironmentView({ environment, onEndSession, onOpenLab }: LabEnvironmentViewProps) {
   const [timeLeft, setTimeLeft] = useState(0);
 
   useEffect(() => {
@@ -115,12 +116,19 @@ export function LabEnvironmentView({ environment, onEndSession }: LabEnvironment
       {/* Actions */}
       <FadeIn delay={0.25}>
         <div className="flex flex-col sm:flex-row items-center gap-3">
-          <a
-            href={environment.accessUrl}
+          <button
+            onClick={onOpenLab}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-[#06060a] bg-[#00e676] hover:bg-[#00c853] rounded-md transition-all glow-accent font-[family-name:var(--font-mono)]"
           >
+            <Zap className="w-4 h-4" />
+            Open Full Terminal
+          </button>
+          <a
+            href={environment.accessUrl}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-[#e8e8ec] bg-[#14141f] border border-[#1a1a2e] hover:border-[#2a2a45] rounded-md transition-all font-[family-name:var(--font-mono)]"
+          >
             <ExternalLink className="w-4 h-4" />
-            Open Lab Dashboard
+            Lab Dashboard
           </a>
           <button
             onClick={onEndSession}

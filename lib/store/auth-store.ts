@@ -16,7 +16,6 @@ interface AppState {
   setLabEnvironment: (env: LabEnvironment | null) => void;
   setPaymentStatus: (status: 'idle' | 'processing' | 'success' | 'failed') => void;
   setHasHydrated: (value: boolean) => void;
-  hydrate: () => void;
 }
 
 const splitStorage: StateStorage = {
@@ -27,7 +26,11 @@ const splitStorage: StateStorage = {
     if (!authStr && !sessionStr) return null;
     const auth = authStr ? JSON.parse(authStr) : {};
     const session = sessionStr ? JSON.parse(sessionStr) : {};
-    return JSON.stringify({ ...auth, ...session });
+    // Deep merge: auth state (localStorage) + session state (sessionStorage)
+    return JSON.stringify({
+      state: { ...auth.state, ...session.state },
+      version: session.version ?? auth.version,
+    });
   },
   setItem: (name, value) => {
     if (typeof window === 'undefined') return;
@@ -69,27 +72,26 @@ export const useAppStore = create<AppState>()(
 
       login: (user) => set({ user, isAuthenticated: true }),
 
-      logout: () =>
+      logout: () => {
+        // Clear all persisted storage on explicit logout
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('cyberlabs-store');
+          sessionStorage.removeItem('cyberlabs-store');
+          document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+        }
         set({
           user: null,
           isAuthenticated: false,
           currentPlan: null,
           labEnvironment: null,
           paymentStatus: 'idle',
-        }),
+        });
+      },
 
       setCurrentPlan: (plan) => set({ currentPlan: plan }),
       setLabEnvironment: (env) => set({ labEnvironment: env }),
       setPaymentStatus: (status) => set({ paymentStatus: status }),
       setHasHydrated: (value) => set({ hasHydrated: value }),
-
-      hydrate: () => {
-        if (typeof document === 'undefined') return;
-        const hasToken = document.cookie.includes('auth-token=');
-        if (!hasToken) {
-          set({ user: null, isAuthenticated: false });
-        }
-      },
     }),
     {
       name: 'cyberlabs-store',
