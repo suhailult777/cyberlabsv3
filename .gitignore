@@ -39,3 +39,25 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# temp / snapshots
+.playwright-mcp/
+*.log
+auth-*.md
+auth-*.png
+dashboard-*.md
+dashboard-*.png
+hero-*.md
+hero-*.png
+payment-*.md
+payment-*.png
+provision-*.md
+provision-*.png
+test-*.png
+
+# agent artifacts
+spec.md
+CLAUDE.md
+opencode.json
+skills-lock.json
+.agents/
