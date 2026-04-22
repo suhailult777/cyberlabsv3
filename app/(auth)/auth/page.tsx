@@ -23,6 +23,11 @@ export default function AuthPage() {
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
   const hasHydrated = useAppStore((s) => s.hasHydrated);
 
+  // Derive form visibility from store state — no separate state needed
+  // This prevents login form flash on browser back button (bfcache)
+  const showForm = hasHydrated && !isAuthenticated;
+
+  // All hooks must be called before any conditional returns
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
@@ -34,12 +39,42 @@ export default function AuthPage() {
   });
 
   // Redirect authenticated users to dashboard after hydration
-  // This prevents login form flash when using browser back button (bfcache)
   useEffect(() => {
     if (hasHydrated && isAuthenticated) {
       router.push('/dashboard');
     }
   }, [hasHydrated, isAuthenticated, router]);
+
+  // Show loading skeleton until hydration is complete
+  // This prevents the login form from flashing on browser back button
+  if (!showForm) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-[#06060a] grid-bg scanlines">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 mb-6">
+              <Terminal className="w-7 h-7 text-[#00e676]" />
+              <span className="text-2xl font-bold text-[#e8e8ec] font-[family-name:var(--font-mono)] text-glow">
+                Cyberlabs
+              </span>
+            </div>
+            <p className="text-sm text-[#8a8a9a] font-[family-name:var(--font-mono)]">
+              {hasHydrated ? 'Redirecting to dashboard...' : 'Restoring session...'}
+            </p>
+          </div>
+          <div className="rounded-lg border border-[#1a1a2e] bg-[#0e0e14] p-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#00e676] shadow-[0_0_12px_#00e676]" />
+            <div className="flex items-center justify-center gap-3 py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-[#00e676]" />
+              <span className="text-sm text-[#8a8a9a] font-[family-name:var(--font-mono)]">
+                {hasHydrated ? 'Redirecting...' : 'Verifying session...'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleLoginSubmit = async (data: LoginForm) => {
     setIsLoading(true);

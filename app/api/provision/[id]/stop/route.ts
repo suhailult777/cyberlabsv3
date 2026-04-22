@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { findEnvironmentById, updateEnvironmentStatus } from '@/lib/data/store';
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { delay } from '@/lib/utils/delay';
 
 export async function POST(
   request: Request,

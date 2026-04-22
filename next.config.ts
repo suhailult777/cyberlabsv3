@@ -9,9 +9,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  env: {
-    NEXT_PUBLIC_EASEBUZZ_CONFIGURED: process.env.EASEBUZZ_KEY && process.env.EASEBUZZ_SALT ? 'true' : 'false',
-  },
 };
 
 export default nextConfig;

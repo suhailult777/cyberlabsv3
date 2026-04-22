@@ -7,9 +7,27 @@ export function Footer() {
             &copy; {new Date().getFullYear()} Cyberlabs :: Mock prototype for educational purposes
           </p>
           <div className="flex items-center gap-6 text-xs text-[#5a5a6a] font-[family-name:var(--font-mono)]">
-            <span className="hover:text-[#8a8a9a] cursor-pointer transition-colors">Privacy</span>
-            <span className="hover:text-[#8a8a9a] cursor-pointer transition-colors">Terms</span>
-            <span className="hover:text-[#8a8a9a] cursor-pointer transition-colors">Support</span>
+            <a
+              href="#"
+              title="Coming soon"
+              className="hover:text-[#8a8a9a] transition-colors"
+            >
+              Privacy
+            </a>
+            <a
+              href="#"
+              title="Coming soon"
+              className="hover:text-[#8a8a9a] transition-colors"
+            >
+              Terms
+            </a>
+            <a
+              href="#"
+              title="Coming soon"
+              className="hover:text-[#8a8a9a] transition-colors"
+            >
+              Support
+            </a>
           </div>
         </div>
       </div>

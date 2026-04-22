@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import { findPlanById, environmentsStore } from '@/lib/data/store';
 import { provisionSchema } from '@/lib/validators/schemas';
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { delay } from '@/lib/utils/delay';
 
 export async function POST(request: Request) {
   await delay(3000);
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
   const parsed = provisionSchema.safeParse(body);
   if (!parsed.success) {

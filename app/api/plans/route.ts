@@ -2,12 +2,16 @@ import { NextResponse } from 'next/server';
 import { labs } from '@/lib/data/labs';
 import { plansStore } from '@/lib/data/store';
 import { planSchema } from '@/lib/validators/schemas';
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { delay } from '@/lib/utils/delay';
 
 export async function POST(request: Request) {
   await delay(300);
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
   const parsed = planSchema.safeParse(body);
   if (!parsed.success) {
@@ -26,7 +30,7 @@ export async function POST(request: Request) {
 
   const plan = {
     id: `plan-${Date.now()}`,
-    userId: body.userId || 'user-1',
+    userId: (body.userId as string) || 'user-1',
     labId: lab.id,
     labName: lab.name,
     hours,

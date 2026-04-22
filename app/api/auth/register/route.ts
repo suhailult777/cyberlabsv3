@@ -5,7 +5,12 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function POST(request: Request) {
   await delay(300);
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
   const parsed = registerSchema.safeParse(body);
   if (!parsed.success) {
@@ -17,7 +22,8 @@ export async function POST(request: Request) {
 
   const { name, email } = parsed.data;
 
-  const token = 'mock-jwt-token-xyz';
+  // Generate unique token per session
+  const token = `mock-token-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const response = NextResponse.json({
     user: {
       id: `user-${Date.now()}`,
@@ -32,6 +38,7 @@ export async function POST(request: Request) {
     maxAge: 60 * 60 * 24 * 7,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
   });
   return response;
 }

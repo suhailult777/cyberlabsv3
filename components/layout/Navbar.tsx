@@ -2,11 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store/auth-store';
 import { LogOut, Terminal } from 'lucide-react';
 
 export function Navbar() {
-  const { isAuthenticated, user, logout, hasHydrated } = useAppStore();
+  const router = useRouter();
+  // Use individual selectors to avoid unnecessary re-renders
+  const isAuthenticated = useAppStore((s) => s.isAuthenticated);
+  const user = useAppStore((s) => s.user);
+  const logout = useAppStore((s) => s.logout);
+  const hasHydrated = useAppStore((s) => s.hasHydrated);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -20,8 +26,8 @@ export function Navbar() {
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     // Then clear client-side state (localStorage, sessionStorage, cookie, zustand)
     logout();
-    // Hard reload to ensure clean state
-    window.location.href = '/';
+    // Use router.push instead of window.location.href to avoid full page reload
+    router.push('/');
   };
 
   if (!hasHydrated) {
@@ -68,6 +74,7 @@ export function Navbar() {
                 <button
                   onClick={handleLogout}
                   className="inline-flex items-center gap-1.5 text-sm font-medium text-[#8a8a9a] hover:text-[#ff4757] transition-colors font-[family-name:var(--font-mono)]"
+                  aria-label="Logout"
                 >
                   <LogOut className="w-4 h-4" />
                   <span className="hidden sm:inline">EXIT</span>

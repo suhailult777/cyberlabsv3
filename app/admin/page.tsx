@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/utils/api';
 import { formatCurrency } from '@/lib/utils/format';
+import { toast } from 'sonner';
 import { Lab, Plan } from '@/types';
 import {
   Activity,
@@ -64,7 +65,7 @@ export default function AdminPage() {
           pendingPayments,
         });
       } catch {
-        // ignore
+        toast.error('Failed to load admin data');
       } finally {
         setLoading(false);
       }

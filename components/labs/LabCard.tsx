@@ -18,9 +18,21 @@ export function LabCard({ lab, isSelected, onSelect }: LabCardProps) {
     advanced: { color: '#ff4757', label: 'ADVANCED' },
   }[lab.difficulty];
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onSelect?.(lab);
+    }
+  };
+
   return (
     <div
       onClick={() => onSelect?.(lab)}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`${lab.name} - ${lab.difficulty} - ${formatCurrency(lab.hourlyPrice)} per hour${isSelected ? ' - Selected' : ''}`}
+      aria-pressed={isSelected}
       className={`group relative rounded-lg border transition-all duration-300 cursor-pointer overflow-hidden bg-[#0e0e14] ${
         isSelected
           ? 'border-[#00e676] glow-accent-strong'
@@ -43,7 +55,7 @@ export function LabCard({ lab, isSelected, onSelect }: LabCardProps) {
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          loading="eager"
+          loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e14] via-[#0e0e14]/40 to-transparent" />
         

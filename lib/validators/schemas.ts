@@ -22,10 +22,38 @@ export const planSchema = z.object({
 
 export const paymentInitiateSchema = z.object({
   planId: z.string().min(1, 'Plan ID is required'),
+  amount: z.number().positive().optional(),
+  productinfo: z.string().optional(),
+  firstname: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  udf1: z.string().optional(),
+  udf2: z.string().optional(),
+  udf3: z.string().optional(),
+  udf4: z.string().optional(),
+  udf5: z.string().optional(),
 });
 
 export const paymentVerifySchema = z.object({
   txnId: z.string().min(1, 'Transaction ID is required'),
+  txnid: z.string().optional(),
+  amount: z.string().optional(),
+  productinfo: z.string().optional(),
+  firstname: z.string().optional(),
+  email: z.string().optional(),
+  status: z.string().optional(),
+  hash: z.string().optional(),
+  planId: z.string().optional(),
+  udf1: z.string().optional(),
+  udf2: z.string().optional(),
+  udf3: z.string().optional(),
+  udf4: z.string().optional(),
+  udf5: z.string().optional(),
+  udf6: z.string().optional(),
+  udf7: z.string().optional(),
+  udf8: z.string().optional(),
+  udf9: z.string().optional(),
+  udf10: z.string().optional(),
 });
 
 export const provisionSchema = z.object({

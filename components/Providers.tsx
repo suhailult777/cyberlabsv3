@@ -10,9 +10,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // Rehydrate the persisted store on client mount
     // The persist middleware will restore user, isAuthenticated, currentPlan, etc.
     // from localStorage/sessionStorage automatically.
-    // We just need to mark hydration as complete.
     useAppStore.persist.rehydrate();
     setHasHydrated(true);
+
+    // Handle bfcache (Back-Forward Cache) restoration
+    // When the browser restores a page from bfcache, the Zustand store might
+    // have stale state. Force rehydration from localStorage to ensure auth persists.
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        useAppStore.persist.rehydrate();
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
   }, [setHasHydrated]);
 
   return <>{children}</>;

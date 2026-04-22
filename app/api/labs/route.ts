@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { labs } from '@/lib/data/labs';
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { delay } from '@/lib/utils/delay';
 
 export async function GET() {
   await delay(300);
