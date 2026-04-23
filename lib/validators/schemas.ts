@@ -37,7 +37,7 @@ export const paymentInitiateSchema = z.object({
 export const paymentVerifySchema = z.object({
   txnId: z.string().min(1, 'Transaction ID is required'),
   txnid: z.string().optional(),
-  amount: z.string().optional(),
+  amount: z.union([z.string(), z.number()]).optional(),
   productinfo: z.string().optional(),
   firstname: z.string().optional(),
   email: z.string().optional(),

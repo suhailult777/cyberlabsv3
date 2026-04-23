@@ -19,8 +19,6 @@ describe('ProvisioningSteps', () => {
 
   it('shows completed steps when currentStep is 2', () => {
     render(<ProvisioningSteps currentStep={2} />);
-    // Should have check circles for completed steps
-    const checkCircles = document.querySelectorAll('[data-testid]');
     // At minimum, the component should render without errors
     expect(screen.getByText('Initializing infrastructure')).toBeInTheDocument();
     expect(screen.getByText('Installing dependencies')).toBeInTheDocument();
